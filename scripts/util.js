@@ -29,7 +29,13 @@ var path = __importStar(require("path"));
 var readline = __importStar(require("readline"));
 var packageJson = require("../package.json");
 function getModName() {
-    return packageJson.name;
+    var modPath = path.resolve(__dirname, "..", "mod");
+    var infoPath = path.join(modPath, "info.json");
+    if (!fs.existsSync(infoPath)) {
+        throw Error("'info.json' not found!");
+    }
+    var info = require(infoPath);
+    return info.name;
 }
 exports.getModName = getModName;
 function setModPath(sourcePath) {

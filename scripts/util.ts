@@ -22,7 +22,13 @@ interface packageSnippet {
 const packageJson: packageSnippet = require("../package.json");
 
 export function getModName(): string {
-	return packageJson.name;
+	const modPath = path.resolve(__dirname, "..", "mod");
+	const infoPath = path.join(modPath, "info.json");
+	if (!fs.existsSync(infoPath)) {
+		throw Error("'info.json' not found!");
+	}
+	const info: ModInfo = require(infoPath);
+	return info.name;
 }
 
 export function setModPath(sourcePath: string) {
