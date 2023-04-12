@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -19,9 +23,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setModPath = exports.getModName = void 0;
+exports.getUserPermission = exports.getCurrentVersion = exports.setModPath = exports.getModName = void 0;
 var fs = __importStar(require("fs-extra"));
 var path = __importStar(require("path"));
+var readline = __importStar(require("readline"));
 var packageJson = require("../package.json");
 function getModName() {
     return packageJson.name;
@@ -35,7 +40,7 @@ function setModPath(sourcePath) {
             var match = devScript.match(/tstl\s+--project\s+(.*?)\s+--watch/);
             if (match) {
                 var newPath = path.join(sourcePath, "tsconfig.json");
-                newScript = "tstl --project " + newPath + " --watch";
+                newScript = "tstl --project ".concat(newPath, " --watch");
             }
             packageJson.scripts.dev = newScript;
             fs.writeFileSync(path.resolve(__dirname, "..", "package.json"), JSON.stringify(packageJson, undefined, 4));
@@ -43,3 +48,38 @@ function setModPath(sourcePath) {
     }
 }
 exports.setModPath = setModPath;
+function getCurrentVersion() {
+    var modPath = path.resolve(__dirname, "..", "mod");
+    var infoPath = path.join(modPath, "info.json");
+    if (!fs.existsSync(infoPath)) {
+        throw Error("'info.json' not found!");
+    }
+    var info = require(infoPath);
+    return info.version;
+}
+exports.getCurrentVersion = getCurrentVersion;
+var rlInterface = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+function getUserPermission(msg) {
+    return new Promise(function (resolve) {
+        rlInterface.setPrompt("".concat(msg, " [y/n] "));
+        rlInterface.prompt();
+        rlInterface.on("line", function (answer) {
+            switch (answer.toLowerCase()) {
+                case "y":
+                    rlInterface.close();
+                    resolve(true);
+                    break;
+                case "n":
+                    rlInterface.close();
+                    resolve(false);
+                    break;
+                default:
+                    process.stdout.write("".concat(msg, " [y/n] ")); // Try again
+            }
+        });
+    });
+}
+exports.getUserPermission = getUserPermission;

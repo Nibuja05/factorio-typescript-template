@@ -1,13 +1,3 @@
-
-data:extend({
-	{
-	    type = "item",
-	    name = "void-pipe",
-	    icon = "__fluid-void-extra__/graphics/void-pipe.png",
-	    icon_size = 32,
-	    subgroup = "storage",
-	    order = "a[items]-d[void-pipe]",
-	    place_result = "void-pipe",
-	    stack_size = 50
-	},
-})
+local ____lualib = require("lualib_bundle")
+local __TS__SourceMapTraceBack = ____lualib.__TS__SourceMapTraceBack
+__TS__SourceMapTraceBack(debug.getinfo(1).short_src, {});

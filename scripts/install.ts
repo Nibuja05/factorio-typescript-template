@@ -1,6 +1,6 @@
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import {ModInfo, getModName, setModPath} from './util';
+import * as fs from "fs-extra";
+import * as path from "path";
+import { ModInfo, getCurrentVersion, getModName, getUserPermission, setModPath } from "./util";
 
 const baseInfo: ModInfo = {
 	name: "",
@@ -10,44 +10,68 @@ const baseInfo: ModInfo = {
 	homepage: "",
 	dependencies: [],
 	description: "",
-	factorio_version: "1.1",
-}
+	factorio_version: "1.1"
+};
 
-function CreateSymlink() {
+async function CreateSymlink() {
 	if (!process.env.APPDATA) {
-		console.log("Appdata/Roaming  directory not found.");
-		return;
+		end(false, "Appdata/Roaming  directory not found");
 	}
 	const factorioPath = path.join(process.env.APPDATA, "Factorio/mods");
 	if (!fs.existsSync(factorioPath)) {
-		console.log("Factorio mod directory not found.");
-		return;
+		end(false, "Factorio mod directory not found");
 	}
 	const modName = getModName();
-	const sourcePath = path.resolve(__dirname, "..", modName);
-	const modPath = path.join(factorioPath, modName + "_0.0.1");
+	const sourcePath = path.resolve(__dirname, "..", "mod");
+	const version = getCurrentVersion();
+	const modPath = path.join(factorioPath, modName + "_" + version);
 	if (fs.existsSync(modPath)) {
-		if (fs.existsSync(sourcePath)) {
-			const isCorrect = fs.lstatSync(sourcePath).isSymbolicLink() && fs.realpathSync(sourcePath) === modPath;
-			if (isCorrect) {
-				console.log("mod is already correctly linked.");
+		if (!isSymlinkCorrect(modPath, sourcePath)) {
+			console.log(`mod '${modPath}' already exists.`);
+			const answer = await getUserPermission("Do you want to delete that directory and relink it?");
+			if (answer) {
+				console.log("Removing ", modPath);
+				fs.rmSync(modPath, {
+					recursive: true
+				});
+			} else {
+				end(false, "Could not create and link directory, as it already exists");
 			}
+		} else {
+			end();
 		}
-		console.log(`mod '${modPath}' already exists.`);
-		return;
 	}
 	const copyPath = path.resolve(__dirname, "..", "mod");
 	if (!fs.existsSync(copyPath)) {
-		console.log("'mod' path does not exist.");
-		return;
+		end(false, "'mod' path does not exist");
 	}
 	baseInfo.name = modName;
 	baseInfo.title = modName.charAt(0).toUpperCase() + modName.slice(1).replace("_", " ");
 	fs.writeFileSync(path.join(copyPath, "info.json"), JSON.stringify(baseInfo, undefined, 4));
 	fs.moveSync(copyPath, modPath);
 	fs.symlinkSync(modPath, sourcePath, "junction");
-	setModPath(modName);
 	console.log(`Linked ${sourcePath} <==> ${modPath}`);
+	end();
+}
+
+function isSymlinkCorrect(modPath: string, sourcePath: string) {
+	if (fs.existsSync(sourcePath)) {
+		const isCorrect = fs.lstatSync(sourcePath).isSymbolicLink() && fs.realpathSync(sourcePath) === modPath;
+		if (isCorrect) {
+			console.log("mod is already correctly linked.");
+			return true;
+		}
+	}
+	return false;
+}
+
+function end(success = true, reason?: string): never {
+	if (success) console.log("\x1b[32m%s\x1b[0m", `\nInstallation successfull!`);
+	else {
+		console.log("\x1b[31m%s\x1b[0m", `\nSomething went wrong...`);
+		if (reason) console.log(reason);
+	}
+	process.exit(0);
 }
 
 CreateSymlink();

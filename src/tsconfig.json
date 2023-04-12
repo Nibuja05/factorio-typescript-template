@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"rootDir": ".",
+		"outDir": "../mod",
+		"target": "esnext",
+		"lib": ["esnext"],
+		"moduleResolution": "node",
+		"strict": true,
+		"sourceMap": false,
+		"types": ["factorio-types"]
+	},
+	"tstl": {
+		"luaTarget": "JIT",
+		"sourceMapTraceback": true
+	},
+	"include": ["./**/*", "../node_modules/typed_factorio/settings/index.d.ts"]
+}

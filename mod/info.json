@@ -1,0 +1,10 @@
+{
+    "name": "my_mod",
+    "version": "0.0.1",
+    "title": "My Mod!",
+    "author": "",
+    "homepage": "",
+    "dependencies": [],
+    "description": "",
+    "factorio_version": "1.1"
+}
